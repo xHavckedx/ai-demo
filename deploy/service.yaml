@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  labels:
+    app: preview
+spec:
+  selector:
+    app: preview
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
