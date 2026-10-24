@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: staging-repo
+spec:
+  project: default
+  destination:
+    namespace: staging
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://github.com/xHavckedx/ai-demo
+    path: deploy
+    targetRevision: ai/CBX-5-historia-cbx-5-crear-plataforma-de-pagos-60240ba1
+  syncPolicy:
+    automated:
+      prune: true
