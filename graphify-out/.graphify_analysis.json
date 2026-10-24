@@ -1,0 +1,28 @@
+{
+  "communities": {
+    "0": [
+      "app",
+      "flask"
+    ],
+    "1": [
+      "app_health",
+      "route"
+    ]
+  },
+  "cohesion": {
+    "0": 1.0,
+    "1": 1.0
+  },
+  "gods": [
+    {
+      "id": "app_health",
+      "label": "health()",
+      "degree": 2
+    }
+  ],
+  "surprises": [],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
