@@ -3,26 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo AI</title>
+    <title>Plataforma de Pagos (Mock)</title>
+    <style>
+        :root {
+            font-family: system-ui, sans-serif;
+            color: #1a1a2e;
+            background: #f4f6fb;
+        }
+        body { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+        h1 { margin-top: 0; }
+        section {
+            background: #fff;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08);
+        }
+        label { display: block; margin-top: .5rem; font-size: .9rem; }
+        input, select, button {
+            font: inherit;
+            padding: .45rem .6rem;
+            margin-top: .25rem;
+        }
+        button {
+            margin-top: .75rem;
+            cursor: pointer;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+        }
+        button.secondary { background: #64748b; margin-left: .5rem; }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: .75rem;
+        }
+        .metric-card {
+            background: #eef2ff;
+            border-radius: 6px;
+            padding: .75rem;
+        }
+        .metric-card strong { display: block; font-size: 1.25rem; }
+        table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+        th, td { text-align: left; padding: .4rem; border-bottom: 1px solid #e2e8f0; }
+        .msg { margin-top: .5rem; font-size: .9rem; }
+        .msg.ok { color: #15803d; }
+        .msg.err { color: #b91c1c; }
+    </style>
 </head>
 <body>
-    <h1>Bienvenido a nuestra consultora de IT</h1>
-    <p>Ofrecemos servicios en todos los aspectos de la tecnología.</p>
-    <button id="clientesBtn">Mostrar Clientes</button>
-    <ul id="clientesList"></ul>
+    <h1>Plataforma de pagos (mock)</h1>
+    <p>Simula pagos, consulta el historial y revisa métricas en tiempo real.</p>
+
+    <section aria-labelledby="metricas-title">
+        <h2 id="metricas-title">Métricas</h2>
+        <div class="metrics" id="metricsGrid">
+            <div class="metric-card"><span>Total pagos</span><strong id="mTotalPagos">0</strong></div>
+            <div class="metric-card"><span>Monto total</span><strong id="mMontoTotal">0.00 €</strong></div>
+            <div class="metric-card"><span>Promedio</span><strong id="mPromedio">0.00 €</strong></div>
+            <div class="metric-card"><span>Máximo</span><strong id="mMax">0.00 €</strong></div>
+        </div>
+        <button type="button" class="secondary" id="refreshMetricsBtn">Actualizar métricas</button>
+    </section>
+
+    <section aria-labelledby="pago-title">
+        <h2 id="pago-title">Nuevo pago</h2>
+        <form id="paymentForm">
+            <label>Cliente
+                <select id="clienteSelect" name="cliente">
+                    <option value="">Anónimo</option>
+                </select>
+            </label>
+            <label>Concepto
+                <input type="text" id="conceptoInput" name="concepto" required placeholder="Ej. Suscripción mensual">
+            </label>
+            <label>Monto (€)
+                <input type="number" id="montoInput" name="monto" min="0.01" step="0.01" required>
+            </label>
+            <button type="submit">Procesar pago (mock)</button>
+        </form>
+        <p class="msg" id="paymentMsg" hidden></p>
+    </section>
+
+    <section aria-labelledby="historial-title">
+        <h2 id="historial-title">Historial de pagos</h2>
+        <button type="button" id="refreshPagosBtn">Actualizar historial</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Concepto</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="pagosBody"></tbody>
+        </table>
+    </section>
+
+    <section aria-labelledby="clientes-title">
+        <h2 id="clientes-title">Clientes</h2>
+        <button type="button" id="clientesBtn">Cargar clientes</button>
+        <ul id="clientesList"></ul>
+    </section>
 
     <script>
-        document.getElementById('clientesBtn').addEventListener('click', async () => {
+        const fmtMoney = (n) => `${Number(n).toFixed(2)} €`;
+        const fmtDate = (iso) => {
+            try { return new Date(iso).toLocaleString('es-ES'); } catch { return iso; }
+        };
+
+        async function loadMetrics() {
+            const res = await fetch('/metricas');
+            const m = await res.json();
+            document.getElementById('mTotalPagos').textContent = m.total_pagos;
+            document.getElementById('mMontoTotal').textContent = fmtMoney(m.monto_total);
+            document.getElementById('mPromedio').textContent = fmtMoney(m.monto_promedio);
+            document.getElementById('mMax').textContent = fmtMoney(m.monto_maximo);
+        }
+
+        async function loadPagos() {
+            const res = await fetch('/pagos');
+            const pagos = await res.json();
+            const body = document.getElementById('pagosBody');
+            body.innerHTML = '';
+            pagos.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${fmtDate(p.creado_en)}</td>
+                    <td>${p.cliente}</td>
+                    <td>${p.concepto}</td>
+                    <td>${fmtMoney(p.monto)}</td>
+                    <td>${p.estado}</td>`;
+                body.appendChild(tr);
+            });
+        }
+
+        async function loadClientes() {
             const response = await fetch('/clientes');
             const clientes = await response.json();
             const list = document.getElementById('clientesList');
+            const select = document.getElementById('clienteSelect');
             list.innerHTML = '';
+            while (select.options.length > 1) select.remove(1);
             clientes.forEach(cliente => {
                 const li = document.createElement('li');
                 li.textContent = cliente.nombre;
                 list.appendChild(li);
+                const opt = document.createElement('option');
+                opt.value = cliente.nombre;
+                opt.textContent = cliente.nombre;
+                select.appendChild(opt);
             });
+        }
+
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('paymentMsg');
+            msg.hidden = true;
+            const payload = {
+                monto: document.getElementById('montoInput').value,
+                concepto: document.getElementById('conceptoInput').value,
+                cliente: document.getElementById('clienteSelect').value || undefined,
+            };
+            const res = await fetch('/pagos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                msg.textContent = data.error || 'Error al procesar el pago';
+                msg.className = 'msg err';
+                msg.hidden = false;
+                return;
+            }
+            msg.textContent = `Pago ${data.id.slice(0, 8)}… registrado (${fmtMoney(data.monto)})`;
+            msg.className = 'msg ok';
+            msg.hidden = false;
+            e.target.reset();
+            await loadPagos();
+            await loadMetrics();
         });
+
+        document.getElementById('refreshMetricsBtn').addEventListener('click', loadMetrics);
+        document.getElementById('refreshPagosBtn').addEventListener('click', loadPagos);
+        document.getElementById('clientesBtn').addEventListener('click', loadClientes);
+
+        loadMetrics();
+        loadPagos();
+        loadClientes();
     </script>
 </body>
 </html>
