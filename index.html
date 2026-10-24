@@ -3,21 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
-    <title>Proyecto Automatizado con IA</title>
+    <title>Demo AI</title>
 </head>
 <body>
-    <section class="hero is-primary">
-        <div class="hero-body">
-            <div class="container">
-                <h1 class="title">
-                    Proyecto Automatizado con IA
-                </h1>
-                <h2 class="subtitle">
-                    Este es un proyecto totalmente automatizado utilizando inteligencia artificial.
-                </h2>
-            </div>
-        </div>
-    </section>
+    <h1>Bienvenido a nuestra consultora de IT</h1>
+    <p>Ofrecemos servicios en todos los aspectos de la tecnología.</p>
+    <button id="clientesBtn">Mostrar Clientes</button>
+    <ul id="clientesList"></ul>
+
+    <script>
+        document.getElementById('clientesBtn').addEventListener('click', async () => {
+            const response = await fetch('/clientes');
+            const clientes = await response.json();
+            const list = document.getElementById('clientesList');
+            list.innerHTML = '';
+            clientes.forEach(cliente => {
+                const li = document.createElement('li');
+                li.textContent = cliente.nombre;
+                list.appendChild(li);
+            });
+        });
+    </script>
 </body>
 </html>
