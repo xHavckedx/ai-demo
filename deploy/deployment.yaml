@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  labels:
+    app: preview
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: preview
+  template:
+    metadata:
+      labels:
+        app: preview
+    spec:
+      containers:
+        - name: app
+          image: preview-ai-demo:9-56f407fa
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
